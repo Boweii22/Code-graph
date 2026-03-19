@@ -1,12 +1,16 @@
 'use client';
 
 import { useState } from 'react';
-import { ExternalLink, Share2, Download, ChevronDown, Plus, Check } from 'lucide-react';
+import { ExternalLink, Share2, Download, ChevronDown, Plus, Check, Menu } from 'lucide-react';
 import { useGraphStore } from '@/lib/store';
 
 const LAYOUTS = ['fcose', 'cose', 'breadthfirst', 'concentric'] as const;
 
-export default function StatsBar() {
+interface Props {
+  onMenuClick?: () => void;
+}
+
+export default function StatsBar({ onMenuClick }: Props) {
   const { nodes, edges, repoUrl, layout, setLayout } = useGraphStore();
   const [layoutOpen, setLayoutOpen] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -36,43 +40,45 @@ export default function StatsBar() {
 
   return (
     <header className="h-11 flex items-center justify-between px-4 border-b border-[#2a2a3a] bg-[#0a0a0f] flex-shrink-0 z-10">
-      {/* Left: logo + repo info */}
-      <div className="flex items-center gap-3">
-        <span className="font-mono font-bold text-sm text-[#f0f0ff]">CodeGraph</span>
-        <span className="text-[#2a2a3a]">·</span>
+      {/* Left: hamburger (mobile) + logo + repo info */}
+      <div className="flex items-center gap-3 min-w-0">
+        {/* Mobile menu button */}
+        <button
+          onClick={onMenuClick}
+          className="md:hidden flex-shrink-0 w-7 h-7 flex items-center justify-center text-[#8888aa] hover:text-[#f0f0ff] transition-colors"
+        >
+          <Menu size={16} />
+        </button>
+        <span className="font-mono font-bold text-sm text-[#f0f0ff] flex-shrink-0">CodeGraph</span>
+        <span className="text-[#2a2a3a] hidden sm:inline">·</span>
         {repoUrl ? (
           <a
             href={repoUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1.5 text-sm text-[#8888aa] hover:text-[#f0f0ff] transition-colors font-mono"
+            className="hidden sm:flex items-center gap-1.5 text-sm text-[#8888aa] hover:text-[#f0f0ff] transition-colors font-mono truncate max-w-[180px]"
           >
             {repoName}
-            <ExternalLink size={12} />
+            <ExternalLink size={12} className="flex-shrink-0" />
           </a>
-        ) : (
-          <span className="text-sm text-[#44445a] font-mono">—</span>
-        )}
-        <span className="text-[#2a2a3a]">·</span>
+        ) : null}
+        <span className="text-[#2a2a3a] hidden sm:inline">·</span>
         <span className="text-xs text-[#8888aa] font-mono">
-          {nodes.length.toLocaleString()} nodes
+          {nodes.length.toLocaleString()} <span className="hidden sm:inline">nodes</span>
         </span>
         <span className="text-[#2a2a3a]">·</span>
         <span className="text-xs text-[#8888aa] font-mono">
-          {edges.length.toLocaleString()} edges
+          {edges.length.toLocaleString()} <span className="hidden sm:inline">edges</span>
         </span>
         {languages.length > 0 && (
-          <>
-            <span className="text-[#2a2a3a]">·</span>
-            <span className="text-xs text-[#8888aa] font-mono">{languages.join(', ')}</span>
-          </>
+          <span className="hidden lg:inline text-xs text-[#8888aa] font-mono">· {languages.join(', ')}</span>
         )}
       </div>
 
       {/* Right: controls */}
       <div className="flex items-center gap-2">
-        {/* Layout picker */}
-        <div className="relative">
+        {/* Layout picker — hidden on mobile */}
+        <div className="relative hidden sm:block">
           <button
             onClick={() => setLayoutOpen((o) => !o)}
             className="flex items-center gap-1.5 px-3 h-7 rounded text-xs font-mono border border-[#2a2a3a] bg-[#111118] text-[#8888aa] hover:text-[#f0f0ff] hover:border-[#5b4dff] transition-colors"
@@ -100,10 +106,10 @@ export default function StatsBar() {
           )}
         </div>
 
-        {/* Export */}
+        {/* Export — hidden on mobile */}
         <button
           onClick={handleExport}
-          className="flex items-center gap-1.5 px-3 h-7 rounded text-xs font-mono border border-[#2a2a3a] bg-[#111118] text-[#8888aa] hover:text-[#f0f0ff] transition-colors"
+          className="hidden md:flex items-center gap-1.5 px-3 h-7 rounded text-xs font-mono border border-[#2a2a3a] bg-[#111118] text-[#8888aa] hover:text-[#f0f0ff] transition-colors"
         >
           <Download size={12} />
           Export JSON

@@ -6,7 +6,7 @@ export default function HomePage() {
   return (
     <main className="min-h-screen bg-[#0a0a0f] flex flex-col">
       {/* Navbar */}
-      <nav className="fixed top-0 left-0 right-0 z-50 h-14 flex items-center justify-between px-6 glass border-b border-[#2a2a3a]">
+      <nav className="fixed top-0 left-0 right-0 z-50 h-14 flex items-center justify-between px-4 md:px-6 glass border-b border-[#2a2a3a]">
         <span className="font-mono font-bold text-[#f0f0ff] text-sm tracking-tight">
           Code<span className="text-[#5b4dff]">Graph</span>
         </span>
@@ -24,7 +24,7 @@ export default function HomePage() {
             href="https://hackernoon.com"
             target="_blank"
             rel="noopener noreferrer"
-            className="px-3 py-1.5 rounded bg-[#00d4a0] text-[#0a0a0f] text-xs font-semibold hover:opacity-90 transition-opacity"
+            className="hidden sm:block px-3 py-1.5 rounded bg-[#00d4a0] text-[#0a0a0f] text-xs font-semibold hover:opacity-90 transition-opacity"
           >
             HackerNoon Hackathon
           </a>

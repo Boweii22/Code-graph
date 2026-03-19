@@ -253,6 +253,8 @@ export default function GraphCanvas({ nodes, edges }: Props) {
     });
 
     cyRef.current = cy;
+    // Expose instance globally for Minimap
+    (window as unknown as Record<string, unknown>)._cyInstance = cy;
 
     // Node click — highlight neighborhood
     cy.on('tap', 'node', (evt) => {

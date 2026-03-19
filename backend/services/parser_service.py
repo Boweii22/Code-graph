@@ -91,10 +91,29 @@ def _walk_tree(tree, source: bytes, lang: str) -> dict:
             name_node = node.child_by_field_name('name')
             if name_node:
                 class_name = get_text(name_node)
+
+                # Extract parent classes (INHERITS_FROM)
+                parents = []
+                if node.type == 'class_definition':
+                    # Python: class Foo(Bar, Baz):
+                    bases = node.child_by_field_name('superclasses') or node.child_by_field_name('bases')
+                    if bases:
+                        for child in bases.children:
+                            if child.type not in (',', '(', ')'):
+                                parents.append(get_text(child).strip())
+                elif node.type == 'class_declaration':
+                    # JS/TS: class Foo extends Bar
+                    for child in node.children:
+                        if child.type == 'class_heritage':
+                            for sub in child.children:
+                                if sub.type == 'identifier':
+                                    parents.append(get_text(sub))
+
                 classes.append({
                     'name': class_name,
                     'line_start': node.start_point[0] + 1,
                     'line_end': node.end_point[0] + 1,
+                    'parents': parents,
                 })
                 for child in node.children:
                     walk(child, parent_class=class_name)
@@ -143,10 +162,12 @@ def _regex_parse(file_info: dict) -> dict:
                 'parent_class': None,
                 'calls': [],
             })
-        # Classes
-        for m in re.finditer(r'^class\s+(\w+)', content, re.MULTILINE):
+        # Classes (with inheritance)
+        for m in re.finditer(r'^class\s+(\w+)\s*(?:\(([^)]*)\))?', content, re.MULTILINE):
             line = content[:m.start()].count('\n') + 1
-            classes.append({'name': m.group(1), 'line_start': line, 'line_end': line + 10})
+            parents = [p.strip() for p in m.group(2).split(',')] if m.group(2) else []
+            parents = [p for p in parents if p and p != 'object']
+            classes.append({'name': m.group(1), 'line_start': line, 'line_end': line + 10, 'parents': parents})
         # Imports
         for m in re.finditer(r'^(?:from\s+([\w.]+)\s+import|import\s+([\w.]+))', content, re.MULTILINE):
             mod = (m.group(1) or m.group(2)).split('.')[0]
@@ -167,10 +188,11 @@ def _regex_parse(file_info: dict) -> dict:
                     'parent_class': None,
                     'calls': [],
                 })
-        # Classes
-        for m in re.finditer(r'class\s+(\w+)', content):
+        # Classes (with extends)
+        for m in re.finditer(r'class\s+(\w+)(?:\s+extends\s+(\w+))?', content):
             line = content[:m.start()].count('\n') + 1
-            classes.append({'name': m.group(1), 'line_start': line, 'line_end': line + 10})
+            parents = [m.group(2)] if m.group(2) else []
+            classes.append({'name': m.group(1), 'line_start': line, 'line_end': line + 10, 'parents': parents})
         # Imports
         for m in re.finditer(r"(?:import|require)\s*\(?['\"]([^'\"]+)['\"]", content):
             pkg = m.group(1)

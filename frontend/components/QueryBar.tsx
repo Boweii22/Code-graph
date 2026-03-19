@@ -70,7 +70,7 @@ export default function QueryBar() {
   };
 
   return (
-    <div className="flex items-center gap-2 px-4 py-2.5 border-t border-[#2a2a3a] bg-[#0a0a0f] flex-shrink-0">
+    <div className="flex items-center gap-2 px-3 py-2 border-t border-[#2a2a3a] bg-[#0a0a0f] flex-shrink-0 flex-wrap sm:flex-nowrap">
       <div className="flex-1 relative">
         <input
           type="text"

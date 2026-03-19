@@ -74,12 +74,18 @@ export default function NodeSidebar() {
       {sidebarOpen && (
         <motion.aside
           key="node-sidebar"
-          initial={{ x: 300, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          exit={{ x: 300, opacity: 0 }}
+          // Desktop: slide in from right | Mobile: slide up from bottom
+          initial={{ x: 0, y: '100%', opacity: 0 }}
+          animate={{ x: 0, y: 0, opacity: 1 }}
+          exit={{ x: 0, y: '100%', opacity: 0 }}
           transition={{ type: 'spring', damping: 28, stiffness: 280 }}
-          className="w-[300px] flex-shrink-0 h-full z-20 glass flex flex-col border-l border-[#2a2a3a] overflow-y-auto"
-          style={{ borderRadius: 0 }}
+          className={[
+            'z-20 glass flex flex-col overflow-y-auto',
+            // Mobile: full-width bottom sheet, max 70vh
+            'fixed bottom-0 left-0 right-0 max-h-[70vh] rounded-t-xl border-t border-[#2a2a3a]',
+            // Desktop: right sidebar panel
+            'md:static md:max-h-none md:h-full md:w-[300px] md:flex-shrink-0 md:rounded-none md:border-t-0 md:border-l md:border-[#2a2a3a]',
+          ].join(' ')}
         >
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-[#2a2a3a] sticky top-0 glass z-10">

@@ -70,6 +70,15 @@ def build_graph(repo_path: str, files: list, parsed: list) -> dict:
                 class_by_name[cls['name']] = cid
             add_edge(cid, fid, 'DEFINED_IN')
 
+    # 2b. INHERITS_FROM edges (after all classes are registered)
+    for file_info, parse_result in zip(files, parsed):
+        fid = _make_file_id(file_info['path'])
+        for cls in parse_result['classes']:
+            cid = f"cls_{cls['name']}_{fid}"[:80]
+            for parent in cls.get('parents', []):
+                if parent in class_by_name:
+                    add_edge(cid, class_by_name[parent], 'INHERITS_FROM')
+
     # 3. Function nodes
     for file_info, parse_result in zip(files, parsed):
         fid = _make_file_id(file_info['path'])

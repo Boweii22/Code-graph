@@ -32,7 +32,7 @@ export default function ChatPanel() {
         exit={{ y: 300, opacity: 0 }}
         transition={{ type: 'spring', damping: 28, stiffness: 280 }}
         className="absolute bottom-0 left-0 right-0 z-30 glass border-t border-[#2a2a3a] flex flex-col"
-        style={{ maxHeight: '45vh', minHeight: '200px' }}
+        style={{ maxHeight: 'min(45vh, 400px)', minHeight: '160px' }}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-2 border-b border-[#2a2a3a] flex-shrink-0">
