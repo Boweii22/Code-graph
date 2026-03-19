@@ -14,7 +14,8 @@ if (!fcoseRegistered && typeof window !== 'undefined') {
   fcoseRegistered = true;
 }
 
-const CYTOSCAPE_STYLES: cytoscape.Stylesheet[] = [
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const CYTOSCAPE_STYLES: any[] = [
   {
     selector: 'node[type="File"]',
     style: {
@@ -30,7 +31,7 @@ const CYTOSCAPE_STYLES: cytoscape.Stylesheet[] = [
       'width': 28,
       'height': 28,
       'shape': 'round-rectangle',
-    } as cytoscape.Css.Node,
+    },
   },
   {
     selector: 'node[type="Class"]',
@@ -45,7 +46,7 @@ const CYTOSCAPE_STYLES: cytoscape.Stylesheet[] = [
       'color': '#f0f0ff',
       'text-valign': 'bottom',
       'text-margin-y': 6,
-    } as cytoscape.Css.Node,
+    },
   },
   {
     selector: 'node[type="Function"]',
@@ -60,7 +61,7 @@ const CYTOSCAPE_STYLES: cytoscape.Stylesheet[] = [
       'color': '#f0f0ff',
       'text-valign': 'bottom',
       'text-margin-y': 5,
-    } as cytoscape.Css.Node,
+    },
   },
   {
     selector: 'node[type="Module"]',
@@ -75,7 +76,7 @@ const CYTOSCAPE_STYLES: cytoscape.Stylesheet[] = [
       'color': '#f0f0ff',
       'text-valign': 'bottom',
       'text-margin-y': 5,
-    } as cytoscape.Css.Node,
+    },
   },
   {
     selector: 'node:selected',
@@ -83,15 +84,15 @@ const CYTOSCAPE_STYLES: cytoscape.Stylesheet[] = [
       'border-width': 3,
       'border-color': '#5b4dff',
       'border-opacity': 1,
-    } as cytoscape.Css.Node,
+    },
   },
   {
     selector: 'node.highlighted',
-    style: { 'opacity': 1 } as cytoscape.Css.Node,
+    style: { 'opacity': 1 },
   },
   {
     selector: 'node.dimmed',
-    style: { 'opacity': 0.06 } as cytoscape.Css.Node,
+    style: { 'opacity': 0.06 },
   },
   {
     selector: 'node.hover',
@@ -100,7 +101,7 @@ const CYTOSCAPE_STYLES: cytoscape.Stylesheet[] = [
       'overlay-color': '#5b4dff',
       'overlay-padding': 6,
       'overlay-opacity': 0.15,
-    } as cytoscape.Css.Node,
+    },
   },
   {
     selector: 'edge',
@@ -112,7 +113,7 @@ const CYTOSCAPE_STYLES: cytoscape.Stylesheet[] = [
       'arrow-scale': 0.8,
       'curve-style': 'bezier',
       'opacity': 0.6,
-    } as cytoscape.Css.Edge,
+    },
   },
   {
     selector: 'edge[type="CALLS"]',
@@ -120,50 +121,50 @@ const CYTOSCAPE_STYLES: cytoscape.Stylesheet[] = [
       'line-color': '#38bdf830',
       'target-arrow-color': '#38bdf8',
       'opacity': 0.7,
-    } as cytoscape.Css.Edge,
+    },
   },
   {
     selector: 'edge[type="IMPORTS"]',
     style: {
       'line-color': '#fb923c30',
       'target-arrow-color': '#fb923c',
-    } as cytoscape.Css.Edge,
+    },
   },
   {
     selector: 'edge[type="DEFINED_IN"]',
     style: {
       'line-color': '#00d4a020',
       'target-arrow-color': '#00d4a0',
-    } as cytoscape.Css.Edge,
+    },
   },
   {
     selector: 'edge[type="BELONGS_TO"]',
     style: {
       'line-color': '#a78bfa20',
       'target-arrow-color': '#a78bfa',
-    } as cytoscape.Css.Edge,
+    },
   },
   {
     selector: 'edge[type="DEPENDS_ON"]',
     style: {
       'line-color': '#6b728040',
       'target-arrow-color': '#6b7280',
-    } as cytoscape.Css.Edge,
+    },
   },
   {
     selector: 'edge[type="INHERITS_FROM"]',
     style: {
       'line-color': '#f472b640',
       'target-arrow-color': '#f472b6',
-    } as cytoscape.Css.Edge,
+    },
   },
   {
     selector: 'edge.highlighted',
-    style: { 'opacity': 1, 'width': 2 } as cytoscape.Css.Edge,
+    style: { 'opacity': 1, 'width': 2 },
   },
   {
     selector: 'edge.dimmed',
-    style: { 'opacity': 0.03 } as cytoscape.Css.Edge,
+    style: { 'opacity': 0.03 },
   },
 ];
 
