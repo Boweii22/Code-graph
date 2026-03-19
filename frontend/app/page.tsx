@@ -1,5 +1,6 @@
 import Hero from '@/components/Hero';
 import RepoInput from '@/components/RepoInput';
+import DemoPreview from '@/components/DemoPreview';
 import { Github } from 'lucide-react';
 
 export default function HomePage() {
@@ -38,6 +39,9 @@ export default function HomePage() {
       <div className="relative z-10 px-4 pb-8 -mt-4">
         <RepoInput />
       </div>
+
+      {/* Demo preview */}
+      <DemoPreview />
 
       {/* Powered by */}
       <footer className="mt-auto border-t border-[#2a2a3a] py-6 px-6 flex flex-col md:flex-row items-center justify-between gap-4">
