@@ -81,10 +81,10 @@ export default function NodeSidebar() {
           transition={{ type: 'spring', damping: 28, stiffness: 280 }}
           className={[
             'z-20 glass flex flex-col overflow-y-auto',
-            // Mobile: full-width bottom sheet, max 70vh
-            'fixed bottom-0 left-0 right-0 max-h-[70vh] rounded-t-xl border-t border-[#2a2a3a]',
+            // Mobile: bottom sheet sitting ABOVE the query bar (bottom-[52px] = query bar height)
+            'fixed bottom-[52px] left-0 right-0 max-h-[55vh] rounded-t-xl border-t border-[#2a2a3a]',
             // Desktop: right sidebar panel
-            'md:static md:max-h-none md:h-full md:w-[300px] md:flex-shrink-0 md:rounded-none md:border-t-0 md:border-l md:border-[#2a2a3a]',
+            'md:static md:bottom-auto md:max-h-none md:h-full md:w-[300px] md:flex-shrink-0 md:rounded-none md:border-t-0 md:border-l md:border-[#2a2a3a]',
           ].join(' ')}
         >
           {/* Header */}

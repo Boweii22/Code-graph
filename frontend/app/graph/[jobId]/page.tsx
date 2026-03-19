@@ -136,7 +136,8 @@ export default function GraphPage() {
         </AnimatePresence>
 
         {/* ── MAIN CANVAS AREA ── */}
-        <div className="flex-1 flex flex-col relative overflow-hidden min-w-0">
+        {/* pb-[52px] on mobile reserves space for fixed QueryBar */}
+        <div className="flex-1 flex flex-col relative overflow-hidden min-w-0 pb-[52px] md:pb-0">
           <div className="flex-1 relative overflow-hidden">
             <GraphCanvas nodes={nodes} edges={edges} />
             <Toolbar />
