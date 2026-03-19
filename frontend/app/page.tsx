@@ -61,7 +61,7 @@ export default function HomePage() {
           </div>
           {/* Video */}
           <video
-            src="/demo.mp4"
+            src="/demo1.mp4"
             autoPlay
             loop
             muted
