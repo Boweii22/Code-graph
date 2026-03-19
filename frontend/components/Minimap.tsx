@@ -41,13 +41,14 @@ export default function Minimap({ nodes, edges }: Props) {
     });
 
     // Try to read real positions from cytoscape instance via window
-    const cyEl = document.getElementById('cy') as HTMLElement & { _cy?: cytoscape.Core };
-    const cy = (window as unknown as Record<string, unknown>)._cyInstance as cytoscape.Core | undefined;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const cy = (window as any)._cyInstance as any;
     if (cy) {
       const ext = cy.extent();
-      const rangeX = ext.x2 - ext.x1 || 1;
-      const rangeY = ext.y2 - ext.y1 || 1;
-      cy.nodes().forEach((n: cytoscape.NodeSingular) => {
+      const rangeX = (ext.x2 - ext.x1) || 1;
+      const rangeY = (ext.y2 - ext.y1) || 1;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      cy.nodes().forEach((n: any) => {
         const pos = n.position();
         positions[n.id()] = {
           x: (pos.x - ext.x1) / rangeX,
