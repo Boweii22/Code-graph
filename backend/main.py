@@ -9,7 +9,7 @@ app = FastAPI(title="CodeGraph API", version="1.0.0", docs_url="/docs")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "https://codegraph.dev", "*"],
+    allow_origins=["http://localhost:3000", "https://codegraph.vercel.app", "*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
