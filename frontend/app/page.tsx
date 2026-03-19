@@ -1,6 +1,6 @@
-import { Github } from 'lucide-react';
 import Hero from '@/components/Hero';
 import RepoInput from '@/components/RepoInput';
+import { Github } from 'lucide-react';
 
 export default function HomePage() {
   return (
@@ -12,7 +12,7 @@ export default function HomePage() {
         </span>
         <div className="flex items-center gap-3">
           <a
-            href="https://github.com"
+            href="https://github.com/Boweii22/Code-graph"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-2 px-3 py-1.5 rounded border border-[#2a2a3a] bg-[#111118] text-xs text-[#8888aa] hover:text-[#f0f0ff] transition-colors"
@@ -21,7 +21,7 @@ export default function HomePage() {
             GitHub
           </a>
           <a
-            href="https://hackernoon.com"
+            href="https://proofofusefulness.com/"
             target="_blank"
             rel="noopener noreferrer"
             className="hidden sm:block px-3 py-1.5 rounded bg-[#00d4a0] text-[#0a0a0f] text-xs font-semibold hover:opacity-90 transition-opacity"
