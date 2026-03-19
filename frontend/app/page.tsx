@@ -1,6 +1,5 @@
 import Hero from '@/components/Hero';
 import RepoInput from '@/components/RepoInput';
-import DemoPreview from '@/components/DemoPreview';
 import { Github } from 'lucide-react';
 
 export default function HomePage() {
@@ -40,8 +39,40 @@ export default function HomePage() {
         <RepoInput />
       </div>
 
-      {/* Demo preview */}
-      <DemoPreview />
+      {/* Demo video */}
+      <div className="relative z-10 w-full max-w-4xl mx-auto mt-16 px-4">
+        <div className="flex items-center gap-2 mb-3">
+          <div className="h-px flex-1 bg-[#2a2a3a]" />
+          <span className="text-xs font-mono text-[#44445a] uppercase tracking-widest">Live demo</span>
+          <div className="h-px flex-1 bg-[#2a2a3a]" />
+        </div>
+        <div className="rounded-xl overflow-hidden border border-[#2a2a3a]"
+          style={{ boxShadow: '0 0 0 1px #2a2a3a, 0 32px 80px rgba(0,0,0,0.6), 0 0 80px rgba(91,77,255,0.08)' }}>
+          {/* Browser chrome */}
+          <div className="flex items-center gap-2 px-4 py-2.5 bg-[#111118] border-b border-[#2a2a3a]">
+            <div className="flex gap-1.5">
+              <div className="w-3 h-3 rounded-full bg-[#f87171]" />
+              <div className="w-3 h-3 rounded-full bg-[#fbbf24]" />
+              <div className="w-3 h-3 rounded-full bg-[#00d4a0]" />
+            </div>
+            <div className="flex-1 mx-4 h-5 rounded bg-[#1a1a24] border border-[#2a2a3a] flex items-center px-3">
+              <span className="text-[10px] font-mono text-[#44445a]">codegraph.vercel.app</span>
+            </div>
+          </div>
+          {/* Video */}
+          <video
+            src="/demo.mp4"
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="w-full block"
+          />
+        </div>
+        <p className="text-center text-xs text-[#44445a] mt-3 font-mono">
+          Interactive graph explorer · Click any node · Ask Claude anything
+        </p>
+      </div>
 
       {/* Powered by */}
       <footer className="mt-auto border-t border-[#2a2a3a] py-6 px-6 flex flex-col md:flex-row items-center justify-between gap-4">
