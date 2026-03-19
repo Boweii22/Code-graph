@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+*.egg-info/
+dist/
+build/
+.env
+
+# Node
+node_modules/
+.next/
+out/
+*.env.local
+.env.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temp
+/tmp/codegraph/
+*.log
