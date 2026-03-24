@@ -10,6 +10,7 @@
 **Paste a public GitHub URL → get an interactive knowledge graph → ask anything via GraphRAG + Claude AI.**
 
 ---
+🔗 Live demo: https://code-graph.vercel.app
 
 ## Features
 
