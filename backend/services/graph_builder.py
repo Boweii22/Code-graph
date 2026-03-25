@@ -79,10 +79,12 @@ def build_graph(repo_path: str, files: list, parsed: list) -> dict:
                 if parent in class_by_name:
                     add_edge(cid, class_by_name[parent], 'INHERITS_FROM')
 
-    # 3. Function nodes
+    # 3. Function nodes (cap per file to avoid browser freeze on large repos)
+    MAX_FN_PER_FILE = 10
     for file_info, parse_result in zip(files, parsed):
         fid = _make_file_id(file_info['path'])
-        for fn in parse_result['functions']:
+        fns = parse_result['functions'][:MAX_FN_PER_FILE]
+        for fn in fns:
             fn_id = f"fn_{fn['name']}_{fid}"[:80]
             if fn_id not in nodes:
                 add_node(fn_id, 'Function', fn['name'],
@@ -110,7 +112,7 @@ def build_graph(repo_path: str, files: list, parsed: list) -> dict:
     # 5. CALLS edges (function → function)
     for file_info, parse_result in zip(files, parsed):
         fid = _make_file_id(file_info['path'])
-        for fn in parse_result['functions']:
+        for fn in parse_result['functions'][:MAX_FN_PER_FILE]:
             fn_id = f"fn_{fn['name']}_{fid}"[:80]
             for call in fn.get('calls', []):
                 if call in func_by_name:

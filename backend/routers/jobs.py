@@ -12,10 +12,23 @@ jobs_db: dict = {}
 
 async def process_repo(job_id: str, repo_url: str):
     try:
+        await asyncio.wait_for(_process_repo_inner(job_id, repo_url), timeout=300)
+    except asyncio.TimeoutError:
+        jobs_db[job_id].update({
+            'status': JobStatus.ERROR,
+            'error': 'Analysis timed out after 5 minutes. Try a smaller repo or one with fewer source files.',
+            'message': 'Timed out',
+            'progress': 0,
+        })
+        git_service.cleanup_repo(job_id)
+
+
+async def _process_repo_inner(job_id: str, repo_url: str):
+    try:
         def update(**kwargs):
             jobs_db[job_id].update(kwargs)
 
-        update(status=JobStatus.CLONING, message='Cloning repository…', progress=10)
+        update(status=JobStatus.CLONING, message='Downloading repository…', progress=10)
         repo_path = await git_service.clone_repo(repo_url, job_id)
 
         update(status=JobStatus.PARSING, message='Scanning source files…', progress=20)
@@ -24,15 +37,17 @@ async def process_repo(job_id: str, repo_url: str):
             raise ValueError("No supported source files found in this repository.")
 
         update(message=f'Parsing {len(files)} files…', progress=35)
+        print(f"[job {job_id[:8]}] Parsing {len(files)} files…")
         parsed = await asyncio.to_thread(
             lambda: [parser_service.parse_file(f) for f in files]
         )
 
         update(message=f'Building knowledge graph from {len(files)} files…', progress=50)
         graph = await asyncio.to_thread(graph_builder.build_graph, repo_path, files, parsed)
+        print(f"[job {job_id[:8]}] Graph built: {len(graph['nodes'])} nodes, {len(graph['edges'])} edges")
 
         update(
-            message=f'Storing {len(graph["nodes"])} nodes in Neo4j…',
+            message=f'Storing {len(graph["nodes"])} nodes…',
             progress=60,
             node_count=len(graph['nodes']),
             edge_count=len(graph['edges']),
@@ -40,10 +55,12 @@ async def process_repo(job_id: str, repo_url: str):
         await neo4j_service.clear_job_graph(job_id)
         await neo4j_service.save_nodes(job_id, graph['nodes'])
         await neo4j_service.save_edges(job_id, graph['edges'])
+        print(f"[job {job_id[:8]}] Stored nodes/edges")
 
         update(status=JobStatus.EMBEDDING, message='Generating vector embeddings…', progress=80)
         await neo4j_service.create_vector_index()
         embeddings = await embedding_service.embed_nodes(graph['nodes'])
+        print(f"[job {job_id[:8]}] Embeddings done: {len(embeddings)}")
         for emb in embeddings:
             await neo4j_service.save_embedding(emb['id'], job_id, emb['embedding'])
 

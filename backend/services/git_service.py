@@ -1,8 +1,11 @@
 import asyncio
-import git
+import io
 import os
+import re
 import shutil
 import tempfile
+import urllib.request
+import zipfile
 from pathlib import Path
 
 # Use system temp dir so it works on both Windows and Linux
@@ -24,15 +27,58 @@ IGNORE_DIRS = {
     'coverage', '.nyc_output', 'eggs', '.eggs',
 }
 
+MAX_FILES = 100  # cap to keep node count manageable for browser rendering
+
+
+def _github_zip_url(repo_url: str) -> str | None:
+    """Return GitHub archive zip URL if this is a GitHub repo, else None."""
+    m = re.match(r'https?://github\.com/([^/]+)/([^/]+?)(?:\.git)?/?$', repo_url)
+    if m:
+        return f"https://github.com/{m.group(1)}/{m.group(2)}/archive/HEAD.zip"
+    return None
+
+
+def _download_and_extract_zip(zip_url: str, tmp_dir: str) -> None:
+    """Download GitHub archive zip and extract contents into tmp_dir."""
+    print(f"[git] Downloading zip from {zip_url}")
+    req = urllib.request.Request(zip_url, headers={"User-Agent": "codegraph/1.0"})
+    with urllib.request.urlopen(req, timeout=120) as response:
+        data = response.read()
+    print(f"[git] Downloaded {len(data) // 1024}KB, extracting…")
+
+    with zipfile.ZipFile(io.BytesIO(data)) as zf:
+        names = zf.namelist()
+        # GitHub zips have a top-level dir like {repo}-HEAD/ — strip it
+        prefix = names[0].split('/')[0] + '/' if names else ''
+        for name in names:
+            rel = name[len(prefix):]
+            if not rel:
+                continue
+            target = os.path.join(tmp_dir, rel)
+            if name.endswith('/'):
+                os.makedirs(target, exist_ok=True)
+            else:
+                os.makedirs(os.path.dirname(target), exist_ok=True)
+                with zf.open(name) as src, open(target, 'wb') as dst:
+                    dst.write(src.read())
+
 
 async def clone_repo(repo_url: str, job_id: str) -> str:
-    """Clone repo to temp dir. Returns path to cloned repo."""
+    """Fetch repo to temp dir. Uses zip download for GitHub, git clone otherwise."""
     tmp_dir = os.path.join(_TMP_BASE, job_id)
     if os.path.exists(tmp_dir):
         shutil.rmtree(tmp_dir)
     os.makedirs(tmp_dir, exist_ok=True)
-    # Run blocking git clone in a thread so the event loop stays responsive
-    await asyncio.to_thread(git.Repo.clone_from, repo_url, tmp_dir, **{"depth": 1})
+
+    zip_url = _github_zip_url(repo_url)
+    if zip_url:
+        await asyncio.to_thread(_download_and_extract_zip, zip_url, tmp_dir)
+    else:
+        import git
+        await asyncio.to_thread(
+            git.Repo.clone_from, repo_url, tmp_dir,
+            **{"depth": 1, "single_branch": True}
+        )
     return tmp_dir
 
 
@@ -58,6 +104,12 @@ def get_source_files(repo_path: str) -> list:
                         })
                 except Exception:
                     pass
+
+    # For large repos, prefer shallower paths (core files) and cap at MAX_FILES
+    if len(files) > MAX_FILES:
+        files.sort(key=lambda f: (f['path'].count('/'), f['path']))
+        files = files[:MAX_FILES]
+
     return files
 
 

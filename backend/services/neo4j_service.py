@@ -54,6 +54,9 @@ async def clear_job_graph(job_id: str):
             print(f"[neo4j] clear_job_graph failed (using memory): {e}")
 
 
+_BATCH = 500  # nodes/edges per Neo4j batch
+
+
 async def save_nodes(job_id: str, nodes: list):
     for node in nodes:
         props = {k: v for k, v in node.items() if v is not None}
@@ -63,14 +66,20 @@ async def save_nodes(job_id: str, nodes: list):
     if _use_neo4j():
         try:
             async with get_driver().session() as s:
+                # Group by type so we can use a typed UNWIND batch per label
+                from collections import defaultdict
+                by_type: dict = defaultdict(list)
                 for node in nodes:
-                    label = node["type"]
                     props = {k: v for k, v in node.items() if v is not None}
                     props["job_id"] = job_id
-                    await s.run(
-                        f"MERGE (n:{label} {{id: $id, job_id: $job_id}}) SET n += $props",
-                        id=node["id"], job_id=job_id, props=props,
-                    )
+                    by_type[node["type"]].append(props)
+                for label, batch in by_type.items():
+                    for i in range(0, len(batch), _BATCH):
+                        chunk = batch[i:i + _BATCH]
+                        await s.run(
+                            f"UNWIND $rows AS row MERGE (n:{label} {{id: row.id, job_id: row.job_id}}) SET n += row",
+                            rows=chunk,
+                        )
         except Exception as e:
             print(f"[neo4j] save_nodes failed (using memory): {e}")
 
@@ -82,16 +91,22 @@ async def save_edges(job_id: str, edges: list):
     if _use_neo4j():
         try:
             async with get_driver().session() as s:
+                from collections import defaultdict
+                by_type: dict = defaultdict(list)
                 for edge in edges:
-                    rel_type = edge["type"]
-                    await s.run(
-                        f"""
-                        MATCH (a {{id: $from_id, job_id: $job_id}})
-                        MATCH (b {{id: $to_id, job_id: $job_id}})
-                        MERGE (a)-[r:{rel_type} {{job_id: $job_id}}]->(b)
-                        """,
-                        from_id=edge["source"], to_id=edge["target"], job_id=job_id,
-                    )
+                    by_type[edge["type"]].append({"src": edge["source"], "tgt": edge["target"]})
+                for rel_type, batch in by_type.items():
+                    for i in range(0, len(batch), _BATCH):
+                        chunk = batch[i:i + _BATCH]
+                        await s.run(
+                            f"""
+                            UNWIND $rows AS row
+                            MATCH (a {{id: row.src, job_id: $job_id}})
+                            MATCH (b {{id: row.tgt, job_id: $job_id}})
+                            MERGE (a)-[r:{rel_type} {{job_id: $job_id}}]->(b)
+                            """,
+                            rows=chunk, job_id=job_id,
+                        )
         except Exception as e:
             print(f"[neo4j] save_edges failed (using memory): {e}")
 

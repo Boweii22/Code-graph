@@ -1,7 +1,16 @@
+import asyncio
 import os
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 _client = None
+_sem: asyncio.Semaphore | None = None  # created lazily inside event loop
+
+
+def _get_sem() -> asyncio.Semaphore:
+    global _sem
+    if _sem is None:
+        _sem = asyncio.Semaphore(20)
+    return _sem
 
 
 def _get_client():
@@ -29,19 +38,23 @@ async def embed_text(text: str) -> list:
 
 
 async def embed_nodes(nodes: list) -> list:
-    """Embed function/class nodes. Silently skips if no API key."""
+    """Embed function/class nodes in parallel. Silently skips if no API key."""
     if not has_openai():
         print("[embeddings] No OPENAI_API_KEY — skipping embeddings (AI search will use keyword fallback)")
         return []
-    results = []
-    for node in nodes:
-        if node['type'] in ('Function', 'Class'):
-            text = (
-                f"{node['type']} {node['label']} "
-                f"in {node.get('file', '')}. "
-                f"{node.get('sourcePreview', '')}"
-            )
+
+    async def embed_one(node):
+        text = (
+            f"{node['type']} {node['label']} "
+            f"in {node.get('file', '')}. "
+            f"{node.get('sourcePreview', '')}"
+        )
+        async with _get_sem():
             embedding = await embed_text(text)
-            if embedding:
-                results.append({'id': node['id'], 'embedding': embedding})
-    return results
+        if embedding:
+            return {'id': node['id'], 'embedding': embedding}
+        return None
+
+    targets = [n for n in nodes if n['type'] in ('Function', 'Class')]
+    raw = await asyncio.gather(*[embed_one(n) for n in targets], return_exceptions=True)
+    return [r for r in raw if r and not isinstance(r, Exception)]

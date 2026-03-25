@@ -20,7 +20,7 @@ const CYTOSCAPE_STYLES: any[] = [
     selector: 'node[type="File"]',
     style: {
       'background-color': '#00d4a0',
-      'border-color': '#00d4a040',
+      'border-color': 'rgba(0, 212, 160, 0.25)',
       'border-width': 2,
       'label': 'data(shortLabel)',
       'font-family': 'Geist Mono, monospace',
@@ -97,7 +97,6 @@ const CYTOSCAPE_STYLES: any[] = [
   {
     selector: 'node.hover',
     style: {
-      'width': 'mapData(width, 0, 100, 30, 120)',
       'overlay-color': '#5b4dff',
       'overlay-padding': 6,
       'overlay-opacity': 0.15,
@@ -118,7 +117,7 @@ const CYTOSCAPE_STYLES: any[] = [
   {
     selector: 'edge[type="CALLS"]',
     style: {
-      'line-color': '#38bdf830',
+      'line-color': 'rgba(56, 189, 248, 0.19)',
       'target-arrow-color': '#38bdf8',
       'opacity': 0.7,
     },
@@ -126,35 +125,35 @@ const CYTOSCAPE_STYLES: any[] = [
   {
     selector: 'edge[type="IMPORTS"]',
     style: {
-      'line-color': '#fb923c30',
+      'line-color': 'rgba(251, 146, 60, 0.19)',
       'target-arrow-color': '#fb923c',
     },
   },
   {
     selector: 'edge[type="DEFINED_IN"]',
     style: {
-      'line-color': '#00d4a020',
+      'line-color': 'rgba(0, 212, 160, 0.13)',
       'target-arrow-color': '#00d4a0',
     },
   },
   {
     selector: 'edge[type="BELONGS_TO"]',
     style: {
-      'line-color': '#a78bfa20',
+      'line-color': 'rgba(167, 139, 250, 0.13)',
       'target-arrow-color': '#a78bfa',
     },
   },
   {
     selector: 'edge[type="DEPENDS_ON"]',
     style: {
-      'line-color': '#6b728040',
+      'line-color': 'rgba(107, 114, 128, 0.25)',
       'target-arrow-color': '#6b7280',
     },
   },
   {
     selector: 'edge[type="INHERITS_FROM"]',
     style: {
-      'line-color': '#f472b640',
+      'line-color': 'rgba(244, 114, 182, 0.25)',
       'target-arrow-color': '#f472b6',
     },
   },
@@ -171,10 +170,10 @@ const CYTOSCAPE_STYLES: any[] = [
 const LAYOUT_OPTIONS: Record<string, cytoscape.LayoutOptions> = {
   fcose: {
     name: 'fcose',
-    quality: 'proof',
+    // @ts-expect-error — quality/nodeRepulsion/etc are fcose-specific, not in base types
+    quality: 'default',
     animate: true,
-    animationDuration: 800,
-    // @ts-expect-error fcose-specific options
+    animationDuration: 600,
     nodeRepulsion: () => 8500,
     idealEdgeLength: () => 120,
     edgeElasticity: () => 0.45,
@@ -211,6 +210,8 @@ interface Props {
 export default function GraphCanvas({ nodes, edges }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const cyRef = useRef<cytoscape.Core | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const layoutRef = useRef<any>(null);
   const selectNode = useGraphStore((s) => s.selectNode);
   const setSidebarOpen = useGraphStore((s) => (open: boolean) => s.selectNode(open ? s.selectedNode : null));
   const hiddenTypes = useGraphStore((s) => s.hiddenTypes);
@@ -243,15 +244,25 @@ export default function GraphCanvas({ nodes, edges }: Props) {
   useEffect(() => {
     if (!containerRef.current || nodes.length === 0) return;
 
+    // Use faster layout for large graphs to avoid browser freeze
+    const initialLayoutOpts = nodes.length > 600
+      ? LAYOUT_OPTIONS['cose']
+      : LAYOUT_OPTIONS['fcose'];
+
     const cy = cytoscape({
       container: containerRef.current,
       elements: buildElements(nodes, edges),
       style: CYTOSCAPE_STYLES,
-      layout: LAYOUT_OPTIONS['fcose'],
+      layout: { name: 'preset' },  // no auto-layout on init; run separately so we can stop it
       minZoom: 0.05,
       maxZoom: 5,
       wheelSensitivity: 0.3,
     });
+
+    // Run layout separately so we hold a reference to stop it on cleanup
+    const runningLayout = cy.layout(initialLayoutOpts);
+    layoutRef.current = runningLayout;
+    runningLayout.run();
 
     cyRef.current = cy;
     // Expose instance globally for Minimap
@@ -297,12 +308,19 @@ export default function GraphCanvas({ nodes, edges }: Props) {
     // Toolbar zoom/fit controls
     const unsubZoomIn  = subscribeToolbar('zoom-in',  () => cy.animate({ zoom: cy.zoom() * 1.3, duration: 200 }));
     const unsubZoomOut = subscribeToolbar('zoom-out', () => cy.animate({ zoom: cy.zoom() * 0.75, duration: 200 }));
-    const unsubFit     = subscribeToolbar('fit',      () => cy.animate({ fit: { padding: 40 }, duration: 300 }));
+    const unsubFit     = subscribeToolbar('fit',      () => cy.animate({ fit: { eles: cy.elements(), padding: 40 }, duration: 300 }));
 
     return () => {
       unsubZoomIn();
       unsubZoomOut();
       unsubFit();
+      // Stop the layout before destroying — prevents the rAF loop from firing
+      // on a destroyed instance (which causes "Cannot read properties of null")
+      if (layoutRef.current) {
+        try { layoutRef.current.stop(); } catch { /* ignore */ }
+        layoutRef.current = null;
+      }
+      cy.stop(true, true); // stop all element animations
       cy.destroy();
       cyRef.current = null;
     };
@@ -312,8 +330,13 @@ export default function GraphCanvas({ nodes, edges }: Props) {
   // Layout switch
   useEffect(() => {
     if (!cyRef.current) return;
+    if (layoutRef.current) {
+      try { layoutRef.current.stop(); } catch { /* ignore */ }
+    }
     const layoutOpts = LAYOUT_OPTIONS[layout] || LAYOUT_OPTIONS['fcose'];
-    cyRef.current.layout(layoutOpts).run();
+    const newLayout = cyRef.current.layout(layoutOpts);
+    layoutRef.current = newLayout;
+    newLayout.run();
   }, [layout]);
 
   // Filter by name
