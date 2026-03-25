@@ -10,6 +10,7 @@
 **Paste a public GitHub URL → get an interactive knowledge graph → ask anything via GraphRAG + Claude AI.**
 
 ---
+🔗 Live demo: https://code-graph.vercel.app
 
 ## Features
 
@@ -26,7 +27,7 @@
 
 ```bash
 # 1. Clone
-git clone https://github.com/your-username/codegraph
+git clone https://github.com/Boweii22/Code-graph
 cd codegraph
 
 # 2. Configure secrets
